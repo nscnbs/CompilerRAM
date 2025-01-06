@@ -1,0 +1,11 @@
+/other
+
+/src/lexer.cpp
+/src/lexer.o
+/src/main.o
+/src/parser.cpp
+/src/parser.hpp
+/src/parser.o
+/src/utils.o
+
+kompilator
