@@ -2,25 +2,27 @@
 #include <cstdio>
 #include <cstdlib>
 #include <cstring>
-#include "utils.hpp"
-
-using namespace std;
+#include <string>
+#include <variant>
+#include <iostream>
+#include <vector>
+#include "semantic.hpp"
 
 extern int yylineno;
-int yylex( void );
+int yylex();
 void yyerror(const char *s);
+
+SemanticAnalyzer semantic;
+
+using YYSTYPE = std::variant<int, std::string>;
 %}
 
-%union {
-    int intVal;
-    char* strVal;
-}
+%define api.value.type {std::variant<int, std::string>}
 
-%token <intVal> NUM
-%token <strVal> PIDENTIFIER
-
-%token PLUS MINUS MULT DIV MOD ASSIGN
-%token EQ NEQ LT GT LTE GTE
+%token NUM
+%token PIDENTIFIER
+%token PLUS MINUS MULT DIV MOD
+%token ASSIGN EQ NEQ LT GT LTE GTE
 %token LBR RBR LSQBR RSQBR COMMA SEMICOLON COLON
 %token PROGRAM PROCEDURE P_BEGIN END IS
 %token IF THEN ELSE ENDIF
@@ -35,58 +37,98 @@ void yyerror(const char *s);
 
 %%
 program:
-    procedures main
+    procedures main {
+        semantic.printDebugInfo();
+        semantic.clear();
+    }
     ;
 
 procedures:
-    procedures PROCEDURE proc_head IS declarations P_BEGIN commands END
-    | procedures PROCEDURE proc_head IS P_BEGIN commands END
-    | /* empty */
+    procedures PROCEDURE proc_head IS declarations P_BEGIN commands END {
+        semantic.addProcedure(std::get<std::string>($3));
+    }
+    | procedures PROCEDURE proc_head IS P_BEGIN commands END {
+        semantic.addProcedure(std::get<std::string>($3));
+    }
+    | /* epsilon */
     ;
 
 main:
-    PROGRAM IS declarations P_BEGIN commands END
-    | PROGRAM IS P_BEGIN commands END
+    PROGRAM IS declarations P_BEGIN commands END {
+        semantic.addProcedure("main");
+    }
+    | PROGRAM IS P_BEGIN commands END {
+        semantic.addProcedure("main");
+    }
     ;
 
 commands:
     commands command
-    | command
+    | command {
+        $$ = $1;
+    }
     ;
 
 command:
     identifier ASSIGN expression SEMICOLON
-    | IF condition THEN commands ELSE commands ENDIF
-    | IF condition THEN commands ENDIF
+    | IF condition THEN commands ELSE commands ENDIF {
+    }
+
+    | IF condition THEN commands ENDIF {
+    }
     | WHILE condition DO commands ENDWHILE
     | REPEAT commands UNTIL condition SEMICOLON
     | FOR PIDENTIFIER FROM value TO value DO commands ENDFOR
     | FOR PIDENTIFIER FROM value DOWNTO value DO commands ENDFOR
     | proc_call SEMICOLON
     | READ identifier SEMICOLON
-    | WRITE value SEMICOLON
+    | WRITE value SEMICOLON {
+    }
+
     ;
 
 proc_head:
-    PIDENTIFIER LBR args_decl RBR
+    PIDENTIFIER LBR args_decl RBR {
+        $$ = $1;
+    }
     ;
 
 proc_call:
-    PIDENTIFIER LBR args RBR
+    PIDENTIFIER LBR args RBR {
+    }
     ;
 
 declarations:
-    declarations COMMA PIDENTIFIER
-    | declarations COMMA PIDENTIFIER LSQBR NUM COLON NUM RSQBR
-    | PIDENTIFIER
-    | PIDENTIFIER LSQBR NUM COLON NUM RSQBR
+    declarations COMMA PIDENTIFIER {
+        semantic.addTemporaryVariable(std::get<std::string>($3), Type::Var);
+        $$ = $1;
+    }
+    | declarations COMMA PIDENTIFIER LSQBR NUM COLON NUM RSQBR {
+        semantic.addTemporaryVariable(std::get<std::string>($3), Type::Arr, std::get<int>($5), std::get<int>($7));
+        $$ = $1;
+    }
+    | PIDENTIFIER {
+        semantic.addTemporaryVariable(std::get<std::string>($1), Type::Var);
+    }
+    | PIDENTIFIER LSQBR NUM COLON NUM RSQBR {
+        semantic.addTemporaryVariable(std::get<std::string>($1), Type::Arr);}
     ;
 
 args_decl:
-    args_decl COMMA PIDENTIFIER
-    | args_decl COMMA T PIDENTIFIER
-    | PIDENTIFIER
-    | T PIDENTIFIER
+    args_decl COMMA PIDENTIFIER {
+        semantic.addTemporaryVariable(std::get<std::string>($3), Type::Var);
+        $$ = $1;
+    }
+    | args_decl COMMA T PIDENTIFIER { 
+        semantic.addTemporaryVariable(std::get<std::string>($4), Type::Arr);
+        $$ = $1;
+    }
+    | PIDENTIFIER {
+        semantic.addTemporaryVariable(std::get<std::string>($1), Type::Var);
+    }
+    | T PIDENTIFIER {
+        semantic.addTemporaryVariable(std::get<std::string>($2), Type::Arr);
+    }
     ;
 
 args:
@@ -113,12 +155,18 @@ condition:
     ;
 
 value:
-    NUM
-    | identifier
+    NUM {
+        $$ = $1;
+    }
+    | identifier {
+        $$ = $1;
+    }
     ;
 
 identifier:
-    PIDENTIFIER
+    PIDENTIFIER {
+        $$ = $1;
+    }
     | PIDENTIFIER LSQBR PIDENTIFIER RSQBR
     | PIDENTIFIER LSQBR NUM RSQBR
 

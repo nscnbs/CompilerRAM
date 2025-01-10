@@ -4,13 +4,13 @@ INCLUDES := -I ../include
 
 SRC_DIR := ./src
 OBJ_DIR := ./src
-SRC_FILES := utils.cpp lexer.cpp parser.cpp main.cpp
+SRC_FILES := lexer.cpp parser.tab.cpp main.cpp semantic.cpp 
 OBJ_FILES := $(SRC_FILES:.cpp=.o)
 
 BISON_FILE := parser.y
 FLEX_FILE := lexer.l
-BISON_SRC := $(SRC_DIR)/parser.cpp
-BISON_HEADER := $(SRC_DIR)/parser.hpp
+BISON_SRC := $(SRC_DIR)/parser.tab.cpp
+BISON_HEADER := $(SRC_DIR)/parser.tab.hpp
 FLEX_SRC := $(SRC_DIR)/lexer.cpp
 
 TARGET := kompilator
@@ -32,4 +32,4 @@ $(FLEX_SRC): $(SRC_DIR)/$(FLEX_FILE) $(BISON_HEADER)
 .PHONY: clean
 
 clean:
-	rm -f $(SRC_DIR)/lexer.cpp $(SRC_DIR)/parser.cpp $(SRC_DIR)/parser.hpp $(SRC_DIR)/*.o $(EXECUTABLE)
+	rm -f $(TARGET) $(SRC_DIR)/lexer.cpp $(SRC_DIR)/parser.tab.* $(SRC_DIR)/*.o $(EXECUTABLE)

@@ -3,9 +3,10 @@
 /src/lexer.cpp
 /src/lexer.o
 /src/main.o
-/src/parser.cpp
-/src/parser.hpp
+/src/parser.tab.cpp
+/src/parser.tab.hpp
+/src/parser.tab.o
 /src/parser.o
-/src/utils.o
+/src/semantic.o
 
 kompilator

@@ -1,8 +1,9 @@
 #include <iostream>
 #include <cstdio>
-#include "parser.hpp"
-
-using namespace std;
+#include <string>
+#include <variant>
+#include <vector>
+#include "parser.tab.hpp"
 
 extern int yynerrs; // liczba błędów
 extern int yylineno; // numer linii
@@ -11,13 +12,13 @@ extern int yyparse();
 
 int main(int argc, char **argv) {
     if (argc < 2) {
-        cerr << "Użycie: " << argv[0] << " <plik_wejściowy>" << endl;
+        std::cerr << "Użycie: " << argv[0] << " <plik_wejściowy>" << std::endl;
         return 1;
     }
 
     FILE *file = fopen(argv[1], "r");
     if (!file) {
-        cerr << "Nie można otworzyć pliku: " << argv[1] << endl;
+        std::cerr << "Nie można otworzyć pliku: " << argv[1] << std::endl;
         return 1;
     }
 
@@ -25,7 +26,7 @@ int main(int argc, char **argv) {
     yyparse();
     fclose(file);
 
-    cout << "Analiza zakończona. Liczba błędów: " << yynerrs << endl;
+    std::cout << "Analiza zakończona. Liczba błędów: " << yynerrs << std::endl;
 
     return 0;
 }

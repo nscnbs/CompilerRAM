@@ -1,9 +1,12 @@
 %option noyywrap
 %option yylineno
-%option nounput
 %{
-#include "parser.hpp"
-#include "utils.hpp"
+#include <iostream>
+#include <cstdio>
+#include <string>
+#include <variant>
+#include <vector>
+#include "parser.tab.hpp"
 
 int yylex();
 %}
@@ -17,55 +20,55 @@ ID          {LETTER}+
 %%
 \#.*\n          ; // Komentarze
 [ \t\r]+        ; // Ignorowanie białych znaków
-\n              ;
+\n              ; // Ignorowanie nowej linii
 
-{NUM}           { yylval.intVal = atoi(yytext); return NUM; }
-{ID}            { yylval.strVal = strdup(yytext); return PIDENTIFIER; }
+{NUM}           { yylval = std::stoi(yytext); return NUM; }
+{ID}            { yylval = std::string(yytext); return PIDENTIFIER; }
 
-"+"             { return PLUS; }
-"-"             { return MINUS; }
-"*"             { return MULT; }
-"/"             { return DIV; }
-"%"             { return MOD; }
-":="            { return ASSIGN; }
+"+"             { yylval = std::string(yytext); return PLUS; }
+"-"             { yylval = std::string(yytext); return MINUS; }
+"*"             { yylval = std::string(yytext); return MULT; }
+"/"             { yylval = std::string(yytext); return DIV; }
+"%"             { yylval = std::string(yytext); return MOD; }
 
-"="             { return EQ; }
-"!="            { return NEQ; }
-"<"             { return LT; }
-">"             { return GT; }
-"<="            { return LTE; }
-">="            { return GTE; }
+":="            { yylval = std::string(yytext); return ASSIGN; }
+"="             { yylval = std::string(yytext); return EQ; }
+"!="            { yylval = std::string(yytext); return NEQ; }
+"<"             { yylval = std::string(yytext); return LT; }
+">"             { yylval = std::string(yytext); return GT; }
+"<="            { yylval = std::string(yytext); return LTE; }
+">="            { yylval = std::string(yytext); return GTE; }
 
-"("             { return LBR; }
-")"             { return RBR; }
-"["             { return LSQBR; }
-"]"             { return RSQBR; }
-","             { return COMMA; }
-":"             { return COLON; }
-";"             { return SEMICOLON; }
+"("             { yylval = std::string(yytext); return LBR; }
+")"             { yylval = std::string(yytext); return RBR; }
+"["             { yylval = std::string(yytext); return LSQBR; }
+"]"             { yylval = std::string(yytext); return RSQBR; }
+","             { yylval = std::string(yytext); return COMMA; }
+":"             { yylval = std::string(yytext); return COLON; }
+";"             { yylval = std::string(yytext); return SEMICOLON; }
 
-"PROGRAM"           { return PROGRAM; }
-"PROCEDURE"         { return PROCEDURE; }
-"BEGIN"             { return P_BEGIN; }
-"END"               { return END; }
-"IS"                { return IS; }
-"IF"                { return IF; }
-"THEN"              { return THEN; }
-"ELSE"              { return ELSE; }
-"ENDIF"             { return ENDIF; }
-"WHILE"             { return WHILE; }
-"DO"                { return DO; }
-"ENDWHILE"          { return ENDWHILE; }
-"REPEAT"            { return REPEAT; }
-"UNTIL"             { return UNTIL; }
-"FOR"               { return FOR; }
-"FROM"              { return FROM; }
-"TO"                { return TO; }
-"DOWNTO"            { return DOWNTO; }
-"ENDFOR"            { return ENDFOR; }
-"READ"              { return READ; }
-"WRITE"             { return WRITE; }
-"T"                 { return T; }
+"PROGRAM"           { yylval = std::string(yytext); return PROGRAM; }
+"PROCEDURE"         { yylval = std::string(yytext); return PROCEDURE; }
+"BEGIN"             { yylval = std::string(yytext); return P_BEGIN; }
+"END"               { yylval = std::string(yytext); return END; }
+"IS"                { yylval = std::string(yytext); return IS; }
+"IF"                { yylval = std::string(yytext); return IF; }
+"THEN"              { yylval = std::string(yytext); return THEN; }
+"ELSE"              { yylval = std::string(yytext); return ELSE; }
+"ENDIF"             { yylval = std::string(yytext); return ENDIF; }
+"WHILE"             { yylval = std::string(yytext); return WHILE; }
+"DO"                { yylval = std::string(yytext); return DO; }
+"ENDWHILE"          { yylval = std::string(yytext); return ENDWHILE; }
+"REPEAT"            { yylval = std::string(yytext); return REPEAT; }
+"UNTIL"             { yylval = std::string(yytext); return UNTIL; }
+"FOR"               { yylval = std::string(yytext); return FOR; }
+"FROM"              { yylval = std::string(yytext); return FROM; }
+"TO"                { yylval = std::string(yytext); return TO; }
+"DOWNTO"            { yylval = std::string(yytext); return DOWNTO; }
+"ENDFOR"            { yylval = std::string(yytext); return ENDFOR; }
+"READ"              { yylval = std::string(yytext); return READ; }
+"WRITE"             { yylval = std::string(yytext); return WRITE; }
+"T"                 { yylval = std::string(yytext); return T; }
 
 .                   { fprintf(stderr, "Nieznany symbol: %s w linii %d\n", yytext, yylineno); return ERROR; }
 %%
