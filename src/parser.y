@@ -14,6 +14,11 @@ void yyerror(const char *s);
 
 SemanticAnalyzer semantic;
 
+int current_procedure_id;
+std::string current_procedure_name;
+
+std::vector<std::string> arg_list;
+
 using YYSTYPE = std::variant<int, std::string>;
 %}
 
@@ -45,20 +50,22 @@ program:
 
 procedures:
     procedures PROCEDURE proc_head IS declarations P_BEGIN commands END {
-        semantic.addProcedure(std::get<std::string>($3));
+        semantic.addProcedure(std::get<int>($5), std::get<std::string>($3));        
     }
     | procedures PROCEDURE proc_head IS P_BEGIN commands END {
-        semantic.addProcedure(std::get<std::string>($3));
+        current_procedure_id = semantic.createProcedure();
+        semantic.addProcedure(current_procedure_id , std::get<std::string>($3));
     }
     | /* epsilon */
     ;
 
 main:
     PROGRAM IS declarations P_BEGIN commands END {
-        semantic.addProcedure("main");
+        semantic.addProcedure(std::get<int>($3), "main");
     }
     | PROGRAM IS P_BEGIN commands END {
-        semantic.addProcedure("main");
+        current_procedure_id = semantic.createProcedure();
+        semantic.addProcedure(current_procedure_id, "main");
     }
     ;
 
@@ -84,44 +91,51 @@ command:
     | READ identifier SEMICOLON
     | WRITE value SEMICOLON {
     }
-
     ;
 
 proc_head:
     PIDENTIFIER LBR args_decl RBR {
+        current_procedure_name = semantic.setNameProcedure(std::get<std::string>($1))
         $$ = $1;
     }
     ;
 
 proc_call:
     PIDENTIFIER LBR args RBR {
+        semantic.checkProcedureCall(current_procedure_name);
+        semantic.validateProcedureCall(current_procedure_id, std::get<std::string>($1), arg_list);
+        semantic.endProcedureCall();
+        $$ = $1;
     }
     ;
 
 declarations:
     declarations COMMA PIDENTIFIER {
-        semantic.addTemporaryVariable(std::get<std::string>($3), Type::Var);
+        semantic.addVariable(std::get<int>($1), std::get<std::string>($3), Type::Var);
         $$ = $1;
     }
-    | declarations COMMA PIDENTIFIER LSQBR NUM COLON NUM RSQBR {
-        semantic.addTemporaryVariable(std::get<std::string>($3), Type::Arr, std::get<int>($5), std::get<int>($7));
+    | declarations COMMA PIDENTIFIER LSQBR NUM COLON NUM RSQBR { 
+        semantic.addVariable(std::get<int>($1), std::get<std::string>($3), Type::Arr, std::get<int>($5), std::get<int>($7));
         $$ = $1;
     }
     | PIDENTIFIER {
-        semantic.addTemporaryVariable(std::get<std::string>($1), Type::Var);
+        current_procedure_id = semantic.createProcedure();
+        semantic.addVariable(current_procedure_id, std::get<std::string>($1), Type::Var);
+        $$ = current_procedure_id;
     }
     | PIDENTIFIER LSQBR NUM COLON NUM RSQBR {
-        semantic.addTemporaryVariable(std::get<std::string>($1), Type::Arr);}
+        current_procedure_id = semantic.createProcedure();
+        semantic.addVariable(current_procedure_id, std::get<std::string>($1), Type::Arr, std::get<int>($3), std::get<int>($5));
+        $$ = current_procedure_id;
+    }
     ;
 
 args_decl:
     args_decl COMMA PIDENTIFIER {
         semantic.addTemporaryVariable(std::get<std::string>($3), Type::Var);
-        $$ = $1;
     }
     | args_decl COMMA T PIDENTIFIER { 
         semantic.addTemporaryVariable(std::get<std::string>($4), Type::Arr);
-        $$ = $1;
     }
     | PIDENTIFIER {
         semantic.addTemporaryVariable(std::get<std::string>($1), Type::Var);
@@ -132,8 +146,15 @@ args_decl:
     ;
 
 args:
-    args COMMA PIDENTIFIER
-    | PIDENTIFIER
+    args COMMA PIDENTIFIER {
+        std::cout << " args COMMA PIDENTIFIER " << std::get<std::string>($3) << std::endl;
+        arg_list.push_back(std::get<std::string>($3));
+    }
+    | PIDENTIFIER {
+        std::cout << " PIDENTIFIER " << std::get<std::string>($1) << std::endl;
+        arg_list.clear();
+        arg_list.push_back(std::get<std::string>($1));
+    }
     ;
 
 expression:
@@ -167,10 +188,16 @@ identifier:
     PIDENTIFIER {
         $$ = $1;
     }
-    | PIDENTIFIER LSQBR PIDENTIFIER RSQBR
-    | PIDENTIFIER LSQBR NUM RSQBR
+    | PIDENTIFIER LSQBR PIDENTIFIER RSQBR {
+        $$ = $1;
+    }
+    | PIDENTIFIER LSQBR NUM RSQBR {
+        semantic.checkArrayIndex(current_procedure_id, std::get<std::string>($1), std::get<int>($3));
+        $$ = $1;
+    }
 
 %%
 void yyerror(const char* s) {
-    fprintf(stderr, "Błąd: %s w linii %d\n", s, yylineno);
+    std::cerr << "Syntax error: " << s << " at line " << yylineno << std::endl;
+    exit(EXIT_FAILURE);
 }

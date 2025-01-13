@@ -14,7 +14,7 @@ int yylex();
 DIGIT       [0-9]
 LETTER      [a-z_]
 
-NUM         {DIGIT}+
+NUM         -?{DIGIT}+
 ID          {LETTER}+
 
 %%
