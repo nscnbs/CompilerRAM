@@ -1,6 +1,5 @@
 CXX := g++
 CXXFLAGS := -std=c++17 -pedantic
-INCLUDES := -I ../include
 
 SRC_DIR := ./src
 OBJ_DIR := ./src
@@ -18,10 +17,10 @@ TARGET := kompilator
 all: $(TARGET)
 
 $(TARGET): $(addprefix $(OBJ_DIR)/, $(OBJ_FILES))
-	$(CXX) $(INCLUDES) $^ -o $@
+	$(CXX) $^ -o $@
 
 $(OBJ_DIR)/%.o: $(SRC_DIR)/%.cpp
-	$(CXX) $(CXXFLAGS) $(INCLUDES) -c $< -o $@
+	$(CXX) $(CXXFLAGS) -c $< -o $@
 
 $(BISON_SRC) $(BISON_HEADER): $(SRC_DIR)/$(BISON_FILE)
 	bison -d -o $(BISON_SRC) $<
@@ -32,4 +31,4 @@ $(FLEX_SRC): $(SRC_DIR)/$(FLEX_FILE) $(BISON_HEADER)
 .PHONY: clean
 
 clean:
-	rm -f $(TARGET) $(SRC_DIR)/lexer.cpp $(SRC_DIR)/parser.tab.* $(SRC_DIR)/*.o $(EXECUTABLE)
+	rm -f $(TARGET) $(SRC_DIR)/lexer.cpp $(SRC_DIR)/parser.tab.* $(SRC_DIR)/*.o $(SRC_DIR)/*.log $(EXECUTABLE)

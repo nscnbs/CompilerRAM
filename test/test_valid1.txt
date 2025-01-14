@@ -5,7 +5,7 @@ BEGIN
     REPEAT
         p := n / 2;
         p := 2 * p;
-        IF n > p THEN
+        IF n = p THEN
             WRITE 1;
         ELSE
             WRITE 0;

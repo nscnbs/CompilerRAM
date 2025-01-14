@@ -3,6 +3,7 @@
 // Variables
 void SemanticAnalyzer::addVariable(int procedure_id, const std::string& name, Type type , int lowerBound, int upperBound) {
     auto& variables = procedure_variables[procedure_id];
+    int id;
 
     for (const auto& var : variables) {
         if (var.name == name) {
@@ -14,49 +15,61 @@ void SemanticAnalyzer::addVariable(int procedure_id, const std::string& name, Ty
         throw std::runtime_error("Error: Invalid array bounds for '" + name + "'");
     }
 
-    variables.push_back({name, type, lowerBound, upperBound});
-    std::cout << "Dodano var: " << name << " do procedury: " << procedure_id << std::endl;
+    if (Type::Arr && lowerBound != 0 && upperBound != 0){
+        // epsilon
+    }
+    else {
+        id = registryAdd(name, 0);
+    }
+    variables.push_back({id, name, type, lowerBound, upperBound});
+    std::cout << "Dodano var: " << name << " with ID: " << id << " do procedury: " << procedure_id << std::endl;
 }
 
 const Variable& SemanticAnalyzer::getVariable(int procedure_id, const std::string& name) const {
-    if (!procedure_variables.count(procedure_id)) {
-        throw std::runtime_error("Error: Procedure ID not found.");
+    if (procedure_variables.count(procedure_id)) {
+        const auto& variables = procedure_variables.at(procedure_id);
+        for (const auto& var : variables) {
+            if (var.name == name) {
+            std::cout << "Get variable: "<< var.id << " " << var.name << " " << var.type << " " << var.lowerBound << " " << var.upperBound << std::endl;
+            return var;
+            }
+        }
     }
 
     for (const auto& var : temporary_variables) {
         if (var.name == name) {
-            std::cout << "Get variable: " << var.name << " " << var.type << " " << var.lowerBound << " " << var.upperBound << std::endl;
+            std::cout << "Get variable: "<< var.id << " " << var.name << " " << var.type << " " << var.lowerBound << " " << var.upperBound << std::endl;
             return var;
         }
     }
 
-    const auto& variables = procedure_variables.at(procedure_id);
-    for (const auto& var : variables) {
-        if (var.name == name) {
-            std::cout << "Get variable: " << var.name << " " << var.type << " " << var.lowerBound << " " << var.upperBound << std::endl;
-            return var;
-        }
-    }
     throw std::runtime_error("Error: Variable '" + name + "' not found in procedure ID: " + std::to_string(procedure_id));
 }
 
+
 void SemanticAnalyzer::addTemporaryVariable(const std::string& name, Type type, int lowerBound, int upperBound) {
+    for (const auto& var : temporary_variables) {
+        if (var.name == name) {
+            throw std::runtime_error("Error: Variable '" + name + "' already declared in procedure");
+        }
+    }
+
     if (type == Type::Arr && (lowerBound > upperBound)) {
         throw std::runtime_error("Error: Invalid bounds for array '" + name + "'");
     }
 
-    temporary_variables.push_back({name, type, lowerBound, upperBound});
+    temporary_variables.push_back({-1, name, type, lowerBound, upperBound});
     std::cout << "Dodano time var: " << name << std::endl;
 }
 
+
 void SemanticAnalyzer::updateTemporaryVariables(int procedure_id) {
-    auto& args = procedure_args[procedure_id];
     for (const auto& var : temporary_variables) {
-        args.push_back({var.name, var.type, var.lowerBound, var.upperBound});
         addVariable(procedure_id, var.name, var.type, var.lowerBound, var.upperBound);
     }
     std::cout << "Dodano all time var do procedury: " << procedure_id << std::endl;
     temporary_variables.clear();
+    temporary_args.clear();
 }
 
 void SemanticAnalyzer::checkArrayIndex(int proc_id, std::string& name, int index) const {
@@ -76,6 +89,7 @@ int SemanticAnalyzer::createProcedure() {
 
 std::string SemanticAnalyzer::setNameProcedure(const std::string& name) {
     proc_call_stack.push_back(name);
+    int id = registryAdd(name, 0);
     return name;
 }    
  
@@ -87,8 +101,8 @@ void SemanticAnalyzer::addProcedure(int procedure_id, const std::string& name) {
     }
 
     std::vector<Type> arg_types;
-    for (const auto& var : temporary_variables) {
-        arg_types.push_back(var.type);
+    for (const auto& arg_type: temporary_args) {
+        arg_types.push_back(arg_type);
     }
     for (const auto& var : arg_types) {
         std::cout << var << std::endl;
@@ -174,26 +188,81 @@ void SemanticAnalyzer::validateProcedureCall(int proc_call_id, const std::string
     checkProcedureParameters(proc_call_id, proc_name, args);
 }
 
+// Instructions
+void SemanticAnalyzer::addInstruction(const std::string& instruction, std::string operand) {
+    instructions.push_back({instruction, operand});
+}
+
+const std::vector<Instruction>& SemanticAnalyzer::getInstructions() const {
+    return instructions;
+}
+
+std::string SemanticAnalyzer::createLabel(const std::string& label) {
+    return label;
+}
+
+void SemanticAnalyzer::setLabel(const std::string& label) {
+    logger.log("LABEL: " + label);
+}
+
+// Registry
+int SemanticAnalyzer::registryAdd(const std::string& name, int val){
+    int addr = next_addr++;
+    registry[addr] = {addr, name, val};
+    return addr;
+}
+
+void SemanticAnalyzer::registryAddArray(const std::string& name, int lower_bound, int upper_bound){
+    int addr = next_addr++;
+    int r_size = registry.size();
+    std::string idx_name = name + "[" + std::to_string(0) + "]";
+    std::cout << "r_size: " << r_size << std::endl;
+    registry[addr] = {addr, idx_name, r_size};
+    for (int i = lower_bound; i <= upper_bound; i++){
+        idx_name = name + "[" + std::to_string(i) + "]";
+        registry[next_addr] = {next_addr, idx_name, 0};
+        next_addr++;
+    }
+}
+
 // Utils
+void SemanticAnalyzer::clearInstructions() {
+    instructions.clear();
+}
+
 void SemanticAnalyzer::clear() {
     procedure_variables.clear();
     procedures.clear();
     next_procedure_id = 0;
+    clearInstructions();
 }
 
-void SemanticAnalyzer::printDebugInfo() const {
-    std::cout << "Procedures:\n";
+void SemanticAnalyzer::printDebugInfo() {
+    logger.log("Procedures:");
     for (const auto& [id, proc] : procedures) {
-        std::cout << "  ID: " << id << ", Name: " << proc.name << "\n";
+        logger.log("  ID: " + std::to_string(id) + ", Name: " + proc.name);
     }
 
-    std::cout << "Variables:\n";
+    logger.log("\nVariables:");
     for (const auto& [proc_id, vars] : procedure_variables) {
-        std::cout << "  Procedure ID: " << proc_id << "\n";
+        logger.log("  Procedure ID: " + std::to_string(proc_id));
         for (const auto& var : vars) {
-            std::cout << "    Name: " << var.name
-                      << ", Type: " << var.type
-                      << ", Bounds: [" << var.lowerBound << ", " << var.upperBound << "]\n";
+            logger.log("    Address: " + std::to_string(var.id) +
+                       ", Name: " + var.name +
+                       ", Type: " + std::to_string(var.type) +
+                       ", Bounds: [" + std::to_string(var.lowerBound) +
+                       ", " + std::to_string(var.upperBound) + "]");
         }
     }
+
+    logger.log("\nRegistry:");
+    for (const auto& p : registry) {
+        logger.log(p.second.name + ": P" + std::to_string(p.second.address) + " = " + std::to_string(p.second.value));
+    }
+
+    logger.log("\nInstructions:");
+    for (const auto& cmd : instructions) {
+        logger.log(cmd.instruction + " " + cmd.operand);
+    }
 }
+

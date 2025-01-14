@@ -1,43 +1,29 @@
-PROCEDURE licz (T s, n) IS
-    j
+PROCEDURE gcd(a, b, c) IS
+	x, y
 BEGIN
-    FOR i FROM 2 TO n DO
-        s[i] := 1;
-    ENDFOR
-    FOR i FROM 2 TO n DO
-        IF s[i] > 0 THEN
-            j := i + i;
-            WHILE j <= n DO
-                s[j] := 0 ;
-                j := j + i ;
-            ENDWHILE
+	x := a;
+	y := b;
+ 	WHILE y > 0 DO
+ 		IF x >= y THEN
+			x := x - y;
+		ELSE
+ 			x := x + y;
+ 			y := x - y;
+			x := x - y;
         ENDIF
-    ENDFOR
-END
-
-PROCEDURE wypisz (T s, n) IS
-BEGIN
-    FOR i FROM n DOWNTO 2 DO
-        IF s[i] > 0 THEN
-            WRITE i;
-        ENDIF
-    ENDFOR
-END
-
-
-PROCEDURE wypisz (T s, n) IS
-BEGIN
-    FOR i FROM n DOWNTO 2 DO
-        IF s[i] > 0 THEN
-            WRITE i;
-        ENDIF
-    ENDFOR
+    ENDWHILE
+    c := x;
 END
 
 PROGRAM IS
-    n, sito[2:100]
+    a, b, c, d, x, y, z
 BEGIN
-    n := 100;
-    licz ( sito, n );
-    wypisz ( sito, n );
+    READ a;
+    READ b;
+    READ c;
+    READ d;
+    gcd ( a, b, x );
+    gcd ( c, d, y );
+    gcd ( x, y, z );
+    WRITE z;
 END

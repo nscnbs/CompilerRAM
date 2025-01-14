@@ -9,5 +9,6 @@
 /src/parser.tab.o
 /src/parser.o
 /src/semantic.o
+/src/kompilator.log
 
 kompilator

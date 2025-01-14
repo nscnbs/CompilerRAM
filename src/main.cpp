@@ -4,11 +4,14 @@
 #include <variant>
 #include <vector>
 #include "parser.tab.hpp"
+#include "logger.hpp"
 
 extern int yynerrs; // liczba błędów
 extern int yylineno; // numer linii
 extern FILE* yyin;
 extern int yyparse();
+
+Logger logger{"src/kompilator.log"};
 
 int main(int argc, char **argv) {
     if (argc < 2) {
@@ -22,6 +25,7 @@ int main(int argc, char **argv) {
         return 1;
     }
 
+    logger.log("File: " + std::string(argv[1]));
     yyin = file;
     yyparse();
     fclose(file);
