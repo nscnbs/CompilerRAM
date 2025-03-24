@@ -1,43 +1,97 @@
+%code requires {
+    #include "types.hpp"
+}
 %{
+#include <iostream>
 #include <cstdio>
-#include <cstdlib>
 #include <cstring>
 #include <string>
 #include <variant>
-#include <iostream>
 #include <vector>
-#include "semantic.hpp"
+#include "manager.hpp"
+#include "instructions.hpp"
 
-extern int yylineno;
 int yylex();
-void yyerror(const char *s);
+extern int yylineno;
+bool err = false;
 
-SemanticAnalyzer semantic;
+void yyerror(const char* s) {
+    fprintf(stderr, "[Error] %s at line %d\n", s, yylineno);
+    err = true;
+}
 
-int current_procedure_id;
-std::string current_procedure_name;
-std::string current_label;
-
-
-std::vector<std::string> arg_list;
-
-using YYSTYPE = std::variant<int, std::string>;
+Manager manager;
+GenerateInstruction generator;
+Types ident;
+Types value;
+Types value2;
+Types lower;
+Types upper;
+std::string nameProc;
+std::string nameArr;
+std::string nameVar;
+std::string number;
+std::string arg;
+std::string decl;
+std::string iter;
+std::string low;
+std::string up;
+std::string idx;
+std::vector<Instruction> procCode;
+std::vector<Instruction> mainCode;
+std::vector<Instruction> com;
+std::vector<Instruction> com2;
+std::vector<Instruction> cond;
+std::vector<Instruction> exprs;
+std::vector<Instruction> rtrn;
+using YYSTYPE = std::variant<std::string, std::vector<Instruction>, Types>;
 %}
 
-%define api.value.type {std::variant<int, std::string>}
+%define api.value.type {std::variant<std::string, std::vector<Instruction>, Types>}
 
-%token NUM
 %token PIDENTIFIER
-%token PLUS MINUS MULT DIV MOD
-%token ASSIGN EQ NEQ LT GT LTE GTE
-%token LBR RBR LSQBR RSQBR COMMA SEMICOLON COLON
-%token PROGRAM PROCEDURE P_BEGIN END IS
-%token IF THEN ELSE ENDIF
-%token WHILE DO ENDWHILE
-%token REPEAT UNTIL
-%token FOR FROM TO DOWNTO ENDFOR
-%token READ WRITE
+%token NUM
+%token PROGRAM
+%token PROCEDURE
+%token BGN
+%token END
+%token IS
+%token IF
+%token THEN
+%token ELSE
+%token ENDIF
+%token WHILE
+%token DO
+%token ENDWHILE
+%token REPEAT
+%token UNTIL
+%token FOR
+%token FROM
+%token TO
+%token DOWNTO
+%token ENDFOR
+%token READ
+%token WRITE
 %token T
+%token PLUS
+%token MINUS
+%token MLTY
+%token DIV
+%token MOD
+%token ASSIGN
+%token EQ
+%token NEQ
+%token LT
+%token GT
+%token LE
+%token GE
+%token LBR
+%token RBR
+%token LSQBR
+%token RSQBR
+%token COMMA
+%token SEMICOLON
+%token COLON
 %token ERROR
 
 %start program
@@ -45,267 +99,296 @@ using YYSTYPE = std::variant<int, std::string>;
 %%
 program:
     procedures main {
-        semantic.addInstruction("HALT", "");
-        semantic.printDebugInfo();
-        semantic.clear();
+        procCode = std::get<std::vector<Instruction>>($1);
+        mainCode = std::get<std::vector<Instruction>>($2);
+        manager.checkInit();
+        generator.generateCode(procCode, mainCode);
     }
     ;
 
 procedures:
-    procedures PROCEDURE proc_head IS declarations P_BEGIN commands END {
-        semantic.addProcedure(std::get<int>($5), std::get<std::string>($3));        
+    procedures PROCEDURE proc_head IS declarations BGN commands END {
+        com = std::get<std::vector<Instruction>>($7);
+        nameProc = std::get<std::string>($3);
+        manager.addProc(nameProc);
+        rtrn = generator.connectProc(nameProc, com);        
+        $$ = rtrn;
     }
-    | procedures PROCEDURE proc_head IS P_BEGIN commands END {
-        current_procedure_id = semantic.createProcedure();
-        semantic.addProcedure(current_procedure_id , std::get<std::string>($3));
+    | procedures PROCEDURE proc_head IS BGN commands END {
+        com = std::get<std::vector<Instruction>>($6);
+        nameProc = std::get<std::string>($3);
+        manager.addProc(nameProc);
+        rtrn = generator.connectProc(nameProc, com);
+        $$ = rtrn;
     }
-    | /* epsilon */
+    | { $$ = std::vector<Instruction>(); }
     ;
 
 main:
-    PROGRAM IS declarations P_BEGIN commands END {
-        semantic.addProcedure(std::get<int>($3), "main");
+    PROGRAM IS declarations BGN commands END {
+        com = std::get<std::vector<Instruction>>($5);
+        nameProc = "main";
+        manager.addProc(nameProc);
+        rtrn = generator.connectMain(com);
+        $$ = rtrn;
     }
-    | PROGRAM IS P_BEGIN commands END {
-        current_procedure_id = semantic.createProcedure();
-        semantic.addProcedure(current_procedure_id, "main");
+    | PROGRAM IS BGN commands END {
+        com = std::get<std::vector<Instruction>>($4);
+        nameProc = "main";
+        manager.addProc(nameProc);
+        rtrn = generator.connectMain(com);
+        $$ = rtrn;
     }
     ;
 
 commands:
     commands command {
+        com = std::get<std::vector<Instruction>>($1);
+        com2 = std::get<std::vector<Instruction>>($2);
+        com.insert(com.end(), com2.begin(), com2.end());
+        $$ = com;
     }
-    | command {
-        $$ = $1;
-    }
+    | command { $$ = $1; }
     ;
 
 command:
     identifier ASSIGN expression SEMICOLON {
-        //semantic.addInstruction("SET", std::get<std::string>($3));
-        semantic.addInstruction("STORE", std::get<std::string>($1));
+        ident = std::get<Types>($1);
+        exprs = std::get<std::vector<Instruction>>($3);
+        manager.initVar(ident);
+        rtrn = generator.connectAssign(ident, exprs);
+        $$ = rtrn;
     }
     | IF condition THEN commands ELSE commands ENDIF {
-        std::string if_label = semantic.createLabel("if");
-        std::string else_label = semantic.createLabel("else");
-        std::string end_label = semantic.createLabel("end_if");
-        
-        if (std::get<std::string>($2) == "=") {
-            current_label = if_label;
-            semantic.setLabel(if_label);
-            // ELSE
-            current_label = end_label;
-            semantic.addInstruction("JUMP", end_label);
-            // THEN
-            semantic.setLabel(end_label);
-        }
-        else {
-            current_label = else_label;
-            semantic.setLabel(else_label);
-            // THEN
-            current_label = semantic.createLabel("end_if");
-            semantic.addInstruction("JUMP", end_label);
-            // ELSE
-            semantic.setLabel(end_label);
-        }
+        cond = std::get<std::vector<Instruction>>($2);
+        com = std::get<std::vector<Instruction>>($4);
+        com2 = std::get<std::vector<Instruction>>($6);
+        rtrn = generator.connectIfElse(cond, com, com2);
+        $$ = rtrn;
     }
-
     | IF condition THEN commands ENDIF {
-        std::string end_label = semantic.createLabel("end_if");
-        // THEN
-        semantic.addInstruction("JUMP", end_label);
-        semantic.setLabel(end_label);
+        cond = std::get<std::vector<Instruction>>($2);
+        com = std::get<std::vector<Instruction>>($4);
+        rtrn = generator.connectIf(cond, com);
+        $$ = rtrn;
     }
     | WHILE condition DO commands ENDWHILE {
-        std::string start_label = semantic.createLabel("start_while");
-        std::string end_label = semantic.createLabel("end_while");
-        semantic.setLabel(start_label);
-        // COND
-        semantic.addInstruction("JZERO", end_label);
-        // BODY
-        semantic.addInstruction("JUMP", start_label);
-        semantic.setLabel(end_label);
+        cond = std::get<std::vector<Instruction>>($2);
+        com = std::get<std::vector<Instruction>>($4);
+        rtrn = generator.connectWhile(cond, com);
+        $$ = rtrn;
     }
     | REPEAT commands UNTIL condition SEMICOLON {
-        std::string start_label = semantic.createLabel("start_repeat");
-        std::string end_label = semantic.createLabel("end_repeat");
-        current_label = start_label;
-        semantic.setLabel(start_label);
-        // COND
-        // BODY
-        semantic.addInstruction("JUMP", start_label);
-        current_label = end_label;
-        semantic.setLabel(end_label);
+        cond = std::get<std::vector<Instruction>>($4);
+        com = std::get<std::vector<Instruction>>($2);
+        rtrn = generator.connectRepeat(com, cond);
+        $$ = rtrn;
     }
-    | FOR PIDENTIFIER FROM value TO value DO commands ENDFOR
-    | FOR PIDENTIFIER FROM value DOWNTO value DO commands ENDFOR
-    | proc_call SEMICOLON
+    | FOR PIDENTIFIER FROM value TO value DO commands ENDFOR {
+        iter = std::get<std::string>($2);
+        lower = std::get<Types>($4);
+        upper = std::get<Types>($6);
+        com = std::get<std::vector<Instruction>>($8);
+        rtrn = generator.connectFor(iter, lower, upper, com);
+        $$ = rtrn;
+    }
+    | FOR PIDENTIFIER FROM value DOWNTO value DO commands ENDFOR {
+        iter = std::get<std::string>($2);
+        lower = std::get<Types>($4);
+        upper = std::get<Types>($6);
+        com = std::get<std::vector<Instruction>>($8);
+        rtrn = generator.connectForDown(iter, lower, upper, com);
+        $$ = rtrn;
+    }
+    | proc_call SEMICOLON {
+        nameProc = std::get<std::string>($1);
+        rtrn = generator.connectCall(nameProc);
+        $$ = rtrn;
+    }
     | READ identifier SEMICOLON {
-        semantic.addInstruction("GET", std::get<std::string>($2));
+        ident = std::get<Types>($2);
+        rtrn = generator.connectRead(ident);
+        $$ = rtrn;
     }
     | WRITE value SEMICOLON {
-        semantic.addInstruction("SET", std::get<std::string>($2));
-        semantic.addInstruction("PUT", "0");
+        value = std::get<Types>($2);
+        rtrn = generator.connectWrite(value);
+        $$ = rtrn;
     }
     ;
 
 proc_head:
     PIDENTIFIER LBR args_decl RBR {
-        current_procedure_name = semantic.setNameProcedure(std::get<std::string>($1));
+        nameProc = std::get<std::string>($1);
+        manager.initProc(nameProc);
         $$ = $1;
     }
     ;
 
 proc_call:
     PIDENTIFIER LBR args RBR {
-        semantic.checkProcedureCall(current_procedure_name);
-        semantic.validateProcedureCall(current_procedure_id, std::get<std::string>($1), arg_list);
-        semantic.endProcedureCall();
+        nameProc = std::get<std::string>($1);
+        manager.checkProcCall(nameProc);
         $$ = $1;
     }
     ;
 
 declarations:
     declarations COMMA PIDENTIFIER {
-        semantic.addTemporaryVariable(std::get<std::string>($3), Type::Var);
-        $$ = $1;
+        decl = std::get<std::string>($3);
+        manager.bufferVar(decl);
     }
-    | declarations COMMA PIDENTIFIER LSQBR NUM COLON NUM RSQBR { 
-        semantic.addTemporaryVariable(std::get<std::string>($3), Type::Arr, std::get<int>($5), std::get<int>($7));
-        semantic.registryAddArray(std::get<std::string>($3), std::get<int>($5), std::get<int>($7));
-        $$ = $1;
+    | declarations COMMA PIDENTIFIER LSQBR NUM COLON NUM RSQBR {
+        decl = std::get<std::string>($3);
+        low = std::get<std::string>($5);
+        up = std::get<std::string>($7);
+        manager.bufferArr(decl, low, up);
     }
     | PIDENTIFIER {
-        current_procedure_id = semantic.createProcedure();
-        semantic.addTemporaryVariable(std::get<std::string>($1), Type::Var);
-        $$ = current_procedure_id;
+        decl = std::get<std::string>($1);
+        manager.bufferVar(decl);
     }
     | PIDENTIFIER LSQBR NUM COLON NUM RSQBR {
-        current_procedure_id = semantic.createProcedure();
-        semantic.addTemporaryVariable(std::get<std::string>($1), Type::Arr, std::get<int>($3), std::get<int>($5));
-        $$ = current_procedure_id;
+        decl = std::get<std::string>($1);
+        low = std::get<std::string>($3);
+        up = std::get<std::string>($5);
+        manager.bufferArr(decl, low, up);
     }
     ;
 
 args_decl:
     args_decl COMMA PIDENTIFIER {
-        semantic.addTemporaryVariable(std::get<std::string>($3), Type::Var);
-        semantic.temporary_args.push_back(Type::Var);
+        arg = std::get<std::string>($3);
+        manager.bufferArg(arg, Type::val);
     }
-    | args_decl COMMA T PIDENTIFIER { 
-        semantic.addTemporaryVariable(std::get<std::string>($4), Type::Arr);
-        semantic.temporary_args.push_back(Type::Arr);
+    | args_decl COMMA T PIDENTIFIER {
+        arg = std::get<std::string>($4);
+        manager.bufferArg(arg, Type::arr);
     }
     | PIDENTIFIER {
-        semantic.addTemporaryVariable(std::get<std::string>($1), Type::Var);
-        semantic.temporary_args.push_back(Type::Var);
+        arg = std::get<std::string>($1);
+        manager.bufferArg(arg, Type::val);
     }
     | T PIDENTIFIER {
-        semantic.addTemporaryVariable(std::get<std::string>($2), Type::Arr);
-        semantic.temporary_args.push_back(Type::Arr);
+        arg = std::get<std::string>($2);
+        manager.bufferArg(arg, Type::arr);
     }
     ;
 
 args:
     args COMMA PIDENTIFIER {
-        arg_list.push_back(std::get<std::string>($3));
+        arg = std::get<std::string>($3);
+        manager.bufferProcCall(arg);
     }
     | PIDENTIFIER {
-        arg_list.clear();
-        arg_list.push_back(std::get<std::string>($1));
+        arg = std::get<std::string>($1);
+        manager.bufferProcCall(arg);
     }
     ;
 
 expression:
     value {
-        $$ = $1;
+        value = std::get<Types>($1);
+        rtrn = generator.connectVal(value);
+        $$ = rtrn;
     }
     | value PLUS value {
-        semantic.addInstruction("LOAD", std::get<std::string>($1));
-        semantic.addInstruction("ADD", std::get<std::string>($3));
+        value = std::get<Types>($1);
+        value2 = std::get<Types>($3);
+        rtrn = generator.connectPlus(value, value2);
+        $$ = rtrn;
     }
     | value MINUS value {
-        semantic.addInstruction("LOAD", std::get<std::string>($1));
-        semantic.addInstruction("SUB", std::get<std::string>($3));
+        value = std::get<Types>($1);
+        value2 = std::get<Types>($3);
+        rtrn = generator.connectMinus(value, value2);
+        $$ = rtrn;
     }
-    | value MULT value {
-        semantic.addInstruction("LOAD", std::get<std::string>($1));
-        semantic.addInstruction("MULT", std::get<std::string>($3));
+    | value MLTY value {
+        value = std::get<Types>($1);
+        value2 = std::get<Types>($3);
+        rtrn = generator.connectMult(value, value2);
+        $$ = rtrn;
     }
     | value DIV value {
-        semantic.addInstruction("LOAD", std::get<std::string>($1));
-        semantic.addInstruction("DIV", std::get<std::string>($3));
+        value = std::get<Types>($1);
+        value2 = std::get<Types>($3);
+        rtrn = generator.connectDiv(value, value2);
+        $$ = rtrn;
     }
     | value MOD value {
-        semantic.addInstruction("LOAD", std::get<std::string>($1));
-        semantic.addInstruction("MOD", std::get<std::string>($3));
+        value = std::get<Types>($1);
+        value2 = std::get<Types>($3);
+        rtrn = generator.connectMod(value, value2);
+        $$ = rtrn;
     }
     ;
 
 condition:
     value EQ value {
-        semantic.addInstruction("LOAD", std::get<std::string>($1));
-        semantic.addInstruction("SUB", std::get<std::string>($3));
-        semantic.addInstruction("JZERO", current_label);
-        //semantic.addInstruction("JUMP", "2");
-        $$ = std::get<std::string>($2);
+        value = std::get<Types>($1);
+        value2 = std::get<Types>($3);
+        rtrn = generator.connectEq(value, value2);
+        $$ = rtrn;
     }
     | value NEQ value {
-        semantic.addInstruction("LOAD", std::get<std::string>($1));
-        semantic.addInstruction("SUB", std::get<std::string>($3));
-        semantic.addInstruction("JZERO", current_label);
-        //semantic.addInstruction("JUMP", "2");
-        $$ = std::get<std::string>($2);
-    }
-    | value LT value {
-        semantic.addInstruction("LOAD", std::get<std::string>($3));
-        semantic.addInstruction("SUB", std::get<std::string>($1));
-        semantic.addInstruction("JPOS", current_label);
-        $$ = std::get<std::string>($2);
+        value = std::get<Types>($1);
+        value2 = std::get<Types>($3);
+        rtrn = generator.connectNeq(value, value2);
+        $$ = rtrn; 
     }
     | value GT value {
-        semantic.addInstruction("LOAD", std::get<std::string>($1));
-        semantic.addInstruction("SUB", std::get<std::string>($3));
-        semantic.addInstruction("JPOS", current_label);
-        $$ = std::get<std::string>($2);
+        value = std::get<Types>($1);
+        value2 = std::get<Types>($3);
+        rtrn = generator.connectGt(value, value2);
+        $$ = rtrn; 
     }
-    | value LTE value {
-        semantic.addInstruction("LOAD", std::get<std::string>($3));
-        semantic.addInstruction("SUB", std::get<std::string>($1));
-        semantic.addInstruction("JNEG", current_label);
-        $$ = std::get<std::string>($2);
+    | value LT value {
+        value = std::get<Types>($1);
+        value2 = std::get<Types>($3);
+        rtrn = generator.connectLt(value, value2);
+        $$ = rtrn;   
     }
-    | value GTE value {
-        semantic.addInstruction("LOAD", std::get<std::string>($1));
-        semantic.addInstruction("SUB", std::get<std::string>($3));
-        semantic.addInstruction("JNEG", current_label);
-        $$ = std::get<std::string>($2);
+    | value GE value {
+        value = std::get<Types>($1);
+        value2 = std::get<Types>($3);
+        rtrn = generator.connectGte(value, value2);
+        $$ = rtrn;    
+    }
+    | value LE value {
+        value = std::get<Types>($1);
+        value2 = std::get<Types>($3);
+        rtrn = generator.connectLte(value, value2);
+        $$ = rtrn;
     }
     ;
 
 value:
     NUM {
-        $$ = std::to_string(std::get<int>($1));
+        number = std::get<std::string>($1);
+        $$ = Types{number, Type::num};
     }
-    | identifier {
-        $$ = $1;
-    }
+    | identifier { $$ = $1; }
     ;
 
 identifier:
     PIDENTIFIER {
-        $$ = $1;
+        nameVar = std::get<std::string>($1);
+        manager.checkVarUsage(nameVar, false);
+        $$ = Types{nameVar, Type::val};
     }
     | PIDENTIFIER LSQBR PIDENTIFIER RSQBR {
-        $$ = $1;
+        nameArr = std::get<std::string>($1);
+        idx = std::get<std::string>($3);
+        manager.checkVarUsage(nameArr, true);
+        $$ = Types{nameArr, Type::arr, idx, Type::val};
     }
     | PIDENTIFIER LSQBR NUM RSQBR {
-        semantic.checkArrayIndex(current_procedure_id, std::get<std::string>($1), std::get<int>($3));
-        $$ = $1;
+        nameArr = std::get<std::string>($1);
+        idx = std::get<std::string>($3);
+        manager.checkVarUsage(nameArr, true);
+        $$ = Types{nameArr, Type::arr, idx, Type::num};
     }
+    ;
 
 %%
-void yyerror(const char* s) {
-    std::cerr << "Syntax error: " << s << " at line " << yylineno << std::endl;
-    exit(EXIT_FAILURE);
-}

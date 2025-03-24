@@ -1,0 +1,18 @@
+PROGRAM IS
+	n, k
+BEGIN
+    READ n;
+    READ k;
+    FOR i FROM n TO k DO
+        WRITE i;
+        WRITE n;
+        WRITE k;
+        FOR j FROM n TO k DO
+            WRITE j;
+            WRITE n;
+            WRITE k;
+            n := n + 1;
+            k := k - 1;
+        ENDFOR
+    ENDFOR
+END

@@ -1,0 +1,57 @@
+PROCEDURE check(c) IS
+BEGIN
+    c := c + 1;
+END
+
+PROGRAM IS
+  n, counter
+BEGIN
+  n := 10;
+  counter := 0;
+  WHILE 0 <= n DO
+    check(counter);
+    n := n - 1;
+  ENDWHILE
+  WRITE counter;
+
+  counter := 0;
+  n := 0;
+  WHILE 10 >= n DO
+    check(counter);
+    n := n + 1;
+  ENDWHILE
+  WRITE counter;
+
+  counter := 0;
+  n := 0;
+  WHILE 10 > n DO
+    check(counter);
+    n := n + 1;
+  ENDWHILE
+  WRITE counter;
+
+  counter := 0;
+  n := 10;
+  WHILE 0 < n DO
+    check(counter);
+    n := n - 1;
+  ENDWHILE
+  WRITE counter;
+
+  counter := 0;
+  n := 10;
+  WHILE 0 != n DO
+    check(counter);
+    n := n - 1;
+  ENDWHILE
+  WRITE counter;
+
+  counter := 0;
+  n := 10;
+  WHILE 10 = n DO
+    check(counter);
+    n := n - 1;
+  ENDWHILE
+  WRITE counter;
+
+END

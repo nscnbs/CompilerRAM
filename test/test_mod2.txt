@@ -1,0 +1,21 @@
+PROGRAM IS
+    n, s[0:10], k
+BEGIN
+    n := 5;
+    s[0] := 50;
+    s[5] := 28;     
+    s[1] := 2030 % 50; # 30
+    s[2] := s[1] % 9;  # 3
+    s[3] := 14 % s[2]; # 2
+    s[4] := s[3] % s[2]; # 2
+    k := s[5];           # 28 # First result
+    WRITE k;         
+    k := s[1] % s[5];   # 2 # Second result
+    WRITE k;
+    k := 0;
+    s[k] := s[k] % s[n]; # s[0] = 22
+    FOR i FROM 0 TO n DO    # FROM s[0] to s[5]
+        k := s[i];
+        WRITE k;
+    ENDFOR   
+END

@@ -1,36 +1,60 @@
 #include <iostream>
 #include <cstdio>
+#include <fstream>
 #include <string>
+#include <memory>
 #include <variant>
 #include <vector>
-#include "parser.tab.hpp"
-#include "logger.hpp"
+#include "parse.hpp"
+#include "instructions.hpp"
+#include "types.hpp"
 
-extern int yynerrs; // liczba błędów
-extern int yylineno; // numer linii
+extern int err;
+extern int yylineno;
 extern FILE* yyin;
 extern int yyparse();
 
-Logger logger{"src/kompilator.log"};
+extern GenerateInstruction generator;
+void writeInstructions(const std::string &outputFile);
 
 int main(int argc, char **argv) {
-    if (argc < 2) {
-        std::cerr << "Użycie: " << argv[0] << " <plik_wejściowy>" << std::endl;
+    if (argc < 3) {
+        std::cerr << "[Error] usage: " << argv[0] << " <input_file> <output_file>" << std::endl;
         return 1;
     }
 
-    FILE *file = fopen(argv[1], "r");
-    if (!file) {
-        std::cerr << "Nie można otworzyć pliku: " << argv[1] << std::endl;
+    auto fileDeleter = [](FILE* f) { if (f) fclose(f); };
+    std::unique_ptr<FILE, decltype(fileDeleter)> inputFile(fopen(argv[1], "r"), fileDeleter);
+    if (!inputFile) {
+        std::cerr << "[Error] cannot read the file: " << argv[1] << std::endl;
         return 1;
     }
+    std::cout << "[Running] processing file: '" << argv[1] << "'" << std::endl;
 
-    logger.log("File: " + std::string(argv[1]));
-    yyin = file;
+    yyin = inputFile.get();
     yyparse();
-    fclose(file);
 
-    std::cout << "Analiza zakończona. Liczba błędów: " << yynerrs << std::endl;
+    writeInstructions(argv[2]);
 
-    return 0;
+    if(err){
+        std::cout << "[Done] exited with code=-1" << std::endl;
+        return 0;
+    }
+    else{
+        std::cout << "[Done] exited with code=0" << std::endl;
+        return 0;
+    }
+}
+
+void writeInstructions(const std::string &outputFile) {
+    std::ofstream out(outputFile);
+    if (!out.is_open()) {
+        std::cerr << "[Error] cannot open the output file: " << outputFile << std::endl;
+        return;
+    }
+    const std::vector<Instruction>& code = generator.getCode();
+    for (const auto& ins : code) {
+        out << ins.op << " " << ins.arg << std::endl;
+    }
+    std::cout << "[Success] written to file: '" << outputFile << "'" << std::endl;
 }

@@ -1,0 +1,61 @@
+PROCEDURE check(c) IS
+BEGIN
+    c := c + 1;
+END
+
+PROGRAM IS
+  matrix[0:10], n, counter
+BEGIN
+  FOR i FROM 0 TO 10 DO
+    matrix[i] := i;
+  ENDFOR
+
+  n := 10;
+  counter := 0;
+  WHILE matrix[n] >= 1 DO
+    counter := counter + 1;
+    n := n - 1;
+  ENDWHILE
+  WRITE counter;
+
+  counter := 0;
+  n := 0;
+  WHILE matrix[n] <= 9 DO
+    counter := counter + 1;
+    n := n + 1;
+  ENDWHILE
+  WRITE counter;
+
+  counter := 0;
+  n := 0;
+  WHILE matrix[n] < 9 DO
+    counter := counter + 1;
+    n := n + 1;
+  ENDWHILE
+  WRITE counter;
+
+  counter := 0;
+  n := 10;
+  WHILE matrix[n] > 1 DO
+    counter := counter + 1;
+    n := n - 1;
+  ENDWHILE
+  WRITE counter;
+
+  counter := 0;
+  n := 10;
+  WHILE matrix[n] != 0 DO
+    check(counter);
+    n := n - 1;
+  ENDWHILE
+  WRITE counter;
+
+  counter := 0;
+  n := 10;
+  WHILE matrix[n] = 10 DO
+    check(counter);
+    n := n - 1;
+  ENDWHILE
+  WRITE counter;
+
+END

@@ -1,0 +1,10 @@
+PROGRAM IS
+    n, p
+BEGIN
+    n := 0;
+    n := 1 + 1;
+    n := p - n;
+    n := p * n;
+    n := 5 / 6;
+    n := 8 % 2;
+END

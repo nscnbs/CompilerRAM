@@ -1,0 +1,64 @@
+PROCEDURE check(c) IS
+BEGIN
+    c := c + 1;
+END
+
+PROGRAM IS
+  matrex[0:10], matrix[0:10], counter
+BEGIN
+
+  FOR i FROM 0 TO 10 DO
+    matrex[i] := 10+i;
+    WRITE matrex[i];
+  ENDFOR
+  
+  WRITE 8888888;
+  FOR i FROM 0 TO 10 DO
+    matrix[i] := i;
+    WRITE matrix[i];
+  ENDFOR
+  WRITE 7777777;
+
+  counter := 0;
+  FOR i FROM matrix[0] TO matrex[10] DO
+    check(counter);
+    matrix[0] := matrix[0] + 1;
+  ENDFOR
+  WRITE counter;
+
+  counter := 0;
+  FOR i FROM matrex[0] TO matrex[10] DO
+    check(counter);
+    matrex[0] := matrex[0] + 1;
+  ENDFOR
+  WRITE counter;
+
+  counter := 0;
+  FOR i FROM matrex[10] DOWNTO matrix[0] DO
+    check(counter);
+    matrex[10] := matrex[10] - 1;
+  ENDFOR
+  WRITE counter;
+
+  counter := 0;
+  FOR i FROM matrex[0] DOWNTO matrix[10] DO
+    check(counter);
+    matrex[0] := matrex[0] - 1;
+  ENDFOR
+  WRITE counter;
+
+  counter := 0;
+  FOR i FROM matrix[0] TO matrex[5] DO
+    check(counter);
+    matrix[0] := matrix[0] + 1;
+  ENDFOR
+  WRITE counter;
+
+  counter := 0;
+  FOR i FROM matrex[5] TO matrix[10] DO
+    check(counter);
+    matrex[5] := matrex[5] + 1;
+  ENDFOR
+  WRITE counter;
+
+END

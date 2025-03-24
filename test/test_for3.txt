@@ -1,0 +1,9 @@
+PROGRAM IS
+	n, k
+BEGIN
+    READ n;
+    READ k;
+    FOR i FROM n TO k DO
+        WRITE i;
+    ENDFOR
+END

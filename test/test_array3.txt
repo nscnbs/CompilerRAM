@@ -1,0 +1,23 @@
+PROGRAM IS
+    n, s[0:10], k
+BEGIN
+    n := 10;
+    FOR i FROM 0 TO n DO
+        s[i] := n + i;
+        k := s[i];
+        WRITE k;
+        k := s[i] + s[i];
+        WRITE k;
+    ENDFOR    
+    WRITE 888;
+    s[2] := 8;
+    k := s[2];
+    WRITE k;
+    k := 1; # s[1] = 11
+    k := s[k];
+    WRITE k;
+    k := s[1] + 1;
+    WRITE k;
+    k := s[1] + s[3];
+    WRITE k;
+END

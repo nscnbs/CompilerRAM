@@ -1,0 +1,25 @@
+PROGRAM IS
+    n, s[0:10], k
+BEGIN
+    n := 5;
+    s[0] := 50;
+    s[5] := 28;     
+    s[1] := 20000 / 50; # 400
+    WRITE s[1];
+    s[2] := s[1] / 4; # 100
+    WRITE s[2];
+    s[3] := 500000 / s[2]; # 5000
+    WRITE s[3];
+    s[4] := s[3] / s[2]; # 50
+    WRITE s[4];
+    k := s[5];          # 28 # First result
+    WRITE k;        
+    k := s[1] / s[5];   # 14 # Second result
+    WRITE k;
+    k := 0;
+    s[k] := s[k] / s[n]; # s[0] = 1
+    WRITE s[k];
+    FOR i FROM 0 TO n DO    # FROM s[0] to s[5]
+        WRITE s[i];
+    ENDFOR   
+END

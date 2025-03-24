@@ -1,0 +1,20 @@
+PROGRAM IS
+    n, s[0:10], k
+BEGIN
+    n := 5;
+    s[5] := 28;
+    s[1] := 20 - 5; # 15
+    s[2] := s[1] - 5; # 10
+    s[3] := 15 - s[2]; # 5
+    s[4] := s[3] - s[2]; # -5
+    k := s[5];
+    WRITE k;
+    k := s[1] - s[5];   # -13
+    WRITE k;
+    k := 0;
+    s[k] := s[k] - s[n]; # -28
+    FOR i FROM 0 TO n DO
+        k := s[i];
+        WRITE k;
+    ENDFOR   
+END

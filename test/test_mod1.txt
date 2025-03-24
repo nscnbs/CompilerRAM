@@ -1,0 +1,35 @@
+PROGRAM IS
+    a, b, q, r, d, k, f, e
+BEGIN
+    a := 10;
+    b := 5;
+    f := 0;
+    IF a < 0 THEN
+        a := 0 - a;
+        f := 1;
+    ENDIF
+    IF b < 0 THEN
+        b := 0 - b;
+    ENDIF
+    q := 0;
+    d := b;
+    k := 1;
+    WHILE d <= a DO
+        d := d + d;
+        k := k + k;
+    ENDWHILE
+    WHILE k > 0 DO
+        IF d <= a THEN
+            a := a - d;
+            q := q + k;
+        ENDIF
+        d := d / 2;
+        k := k / 2;
+    ENDWHILE
+    r := a;
+    IF f = 1 THEN 
+        r := 0 - r;
+    ENDIF
+    e := r;
+    WRITE e;
+END

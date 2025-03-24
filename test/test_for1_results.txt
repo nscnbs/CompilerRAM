@@ -1,0 +1,94 @@
+First for: i: 1 n: 1 k: 10
+Second for: j: 1 n: 1 k: 10
+Second for: j: 2 n: 2 k: 9
+Second for: j: 3 n: 3 k: 8
+Second for: j: 4 n: 4 k: 7
+Second for: j: 5 n: 5 k: 6
+Counter j: 5
+First for: i: 2 n: 6 k: 5
+Counter j: 0
+First for: i: 3 n: 6 k: 5
+Counter j: 0
+First for: i: 4 n: 6 k: 5
+Counter j: 0
+First for: i: 5 n: 6 k: 5
+Counter j: 0
+Counter i: 5
+
+
+ i: 1
+ n: 1
+ k: 10
+ i: 1
+ n: 1
+ k: 10
+ i: 1
+ n: 2
+ k: 9
+ i: 1
+ n: 3
+ k: 8
+ i: 1
+ n: 4
+ k: 7
+ i: 1
+ n: 5
+ k: 6
+ i: 2
+ n: 6
+ k: 5
+ i: 3
+ n: 6
+ k: 5
+ i: 4
+ n: 6
+ k: 5
+ i: 5
+ n: 6
+ k: 5
+
+
+
+
+    /*
+    int n=1;
+    int k=10;
+    for(int i=n; i<=k; i++){
+        cout << " i: " << i << endl;
+        cout << " n: " << n << endl;
+        cout << " k: " << k << endl;
+        for(int j=n; j<=k; j++){
+            cout << " i: " << i << endl;
+            cout << " n: " << n << endl;
+            cout << " k: " << k << endl;
+            n++;
+            k--;
+        }
+    }
+
+    int n=1;
+    int k=10;
+    int count_i = 0;
+    for(int i=n; i<=k; i++){
+        int count_j = 0;
+        cout << "First for: i: " << i << " n: " << n << " k: " << k << endl;
+        count_i++;
+        for(int j=n; j<=k; j++){
+            cout << "Second for: j: " << j << " n: " << n << " k: " << k << endl;
+            n++;
+            k--;
+            count_j++;
+        }
+        cout << "Counter j: " << count_j << endl;
+    }
+    cout << "Counter i: " << count_i << endl;
+    */
+    /*
+        int n=-1;
+    int k=0;
+    for(int i=-10; i<=n; i++){
+        cout << i << endl;
+        k++;
+    }
+    cout << k << endl;
+    */

@@ -6,50 +6,41 @@
 #include <string>
 #include <variant>
 #include <vector>
-#include "parser.tab.hpp"
+#include "parse.hpp"
+#include "instructions.hpp"
+#include "types.hpp"
 
 int yylex();
+bool expect_operand = true;
 %}
 
-DIGIT       [0-9]
-LETTER      [a-z_]
-
-NUM         -?{DIGIT}+
-ID          {LETTER}+
+DIGIT       [[:digit:]]
+LETTER      [_a-z]
 
 %%
-\#.*\n          ; // Komentarze
-[ \t\r]+        ; // Ignorowanie białych znaków
-\n              ; // Ignorowanie nowej linii
+"-"{DIGIT}+  {
+    if ( expect_operand ) {
+        yylval = std::string(yytext);
+        expect_operand = false;
+        return NUM;
+    } else {
+        int len = (int)strlen(yytext);
+        for (int i = len - 1; i > 0; i--) {
+            unput(yytext[i]);
+        }
+        yylval = std::string("-");
+        expect_operand = true;
+        return MINUS;
+    }
+}
 
-{NUM}           { yylval = std::stoi(yytext); return NUM; }
-{ID}            { yylval = std::string(yytext); return PIDENTIFIER; }
+{DIGIT}+      { yylval = std::string(yytext); expect_operand = false; return NUM; }
 
-"+"             { yylval = std::string(yytext); return PLUS; }
-"-"             { yylval = std::string(yytext); return MINUS; }
-"*"             { yylval = std::string(yytext); return MULT; }
-"/"             { yylval = std::string(yytext); return DIV; }
-"%"             { yylval = std::string(yytext); return MOD; }
-
-":="            { yylval = std::string(yytext); return ASSIGN; }
-"="             { yylval = std::string(yytext); return EQ; }
-"!="            { yylval = std::string(yytext); return NEQ; }
-"<"             { yylval = std::string(yytext); return LT; }
-">"             { yylval = std::string(yytext); return GT; }
-"<="            { yylval = std::string(yytext); return LTE; }
-">="            { yylval = std::string(yytext); return GTE; }
-
-"("             { yylval = std::string(yytext); return LBR; }
-")"             { yylval = std::string(yytext); return RBR; }
-"["             { yylval = std::string(yytext); return LSQBR; }
-"]"             { yylval = std::string(yytext); return RSQBR; }
-","             { yylval = std::string(yytext); return COMMA; }
-":"             { yylval = std::string(yytext); return COLON; }
-";"             { yylval = std::string(yytext); return SEMICOLON; }
+{LETTER}+     { yylval = std::string(yytext); expect_operand = false; return PIDENTIFIER; }
 
 "PROGRAM"           { yylval = std::string(yytext); return PROGRAM; }
 "PROCEDURE"         { yylval = std::string(yytext); return PROCEDURE; }
-"BEGIN"             { yylval = std::string(yytext); return P_BEGIN; }
+"BEGIN"             { yylval = std::string(yytext); return BGN; }
 "END"               { yylval = std::string(yytext); return END; }
 "IS"                { yylval = std::string(yytext); return IS; }
 "IF"                { yylval = std::string(yytext); return IF; }
@@ -70,5 +61,31 @@ ID          {LETTER}+
 "WRITE"             { yylval = std::string(yytext); return WRITE; }
 "T"                 { yylval = std::string(yytext); return T; }
 
-.                   { fprintf(stderr, "Nieznany symbol: %s w linii %d\n", yytext, yylineno); return ERROR; }
+"+"                 { yylval = std::string(yytext); return PLUS; }
+"-"                 { yylval = std::string(yytext); return MINUS; }
+"*"                 { yylval = std::string(yytext); return MLTY; }
+"/"                 { yylval = std::string(yytext); return DIV; }
+"%"                 { yylval = std::string(yytext); return MOD; }
+
+":="                { yylval = std::string(yytext); return ASSIGN; }
+"="                 { yylval = std::string(yytext); return EQ; }
+"!="                { yylval = std::string(yytext); return NEQ; }
+"<"                 { yylval = std::string(yytext); return LT; }
+">"                 { yylval = std::string(yytext); return GT; }
+"<="                { yylval = std::string(yytext); return LE; }
+">="                { yylval = std::string(yytext); return GE; }
+
+"("                 { yylval = std::string(yytext); return LBR; }
+")"                 { yylval = std::string(yytext); return RBR; }
+"["                 { yylval = std::string(yytext); return LSQBR; }
+"]"                 { yylval = std::string(yytext); return RSQBR; }
+","                 { yylval = std::string(yytext); return COMMA; }
+":"                 { yylval = std::string(yytext); return COLON; }
+";"                 { yylval = std::string(yytext); return SEMICOLON; }
+
+\#.*\n              ;
+[ \t\r]+            ;
+\n                  ;
+
+.                   { fprintf(stderr, "[Error] urecognized symbol: %s in line %d\n", yytext, yylineno); return ERROR; }
 %%

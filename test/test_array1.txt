@@ -1,0 +1,10 @@
+PROGRAM IS
+    n, s[0:10], k
+BEGIN
+    n := 10;
+    FOR i FROM 0 TO n DO
+        s[i] := n + i;
+        k := s[i];
+        WRITE k;
+    ENDFOR    
+END

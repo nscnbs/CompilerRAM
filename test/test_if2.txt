@@ -1,16 +1,15 @@
 PROGRAM IS
-    n, p
+    n, k
 BEGIN
     READ n;
-    p := n / 2;
-    p := 2 * p;
-    IF n > p THEN  #2
+    READ k;
+    IF n > k THEN  #2
         WRITE 11;
-        IF n > p THEN #1
+        IF n < k THEN #1
             WRITE 22;
         ELSE
             WRITE 2;
-            IF n > p THEN #1
+            IF n > k THEN #1
                 WRITE 33;
             ELSE
                 WRITE 3;
@@ -19,5 +18,4 @@ BEGIN
     ELSE
         WRITE 12;    
     ENDIF
-    n := n / 2;
 END

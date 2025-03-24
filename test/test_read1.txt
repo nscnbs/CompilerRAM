@@ -1,0 +1,13 @@
+PROGRAM IS
+    n, s[0:10], k
+BEGIN
+    n := 4;
+    READ s[7];
+    WRITE s[7];
+    FOR i FROM 0 TO n DO    # FROM s[0] to s[5]
+        READ s[i];
+    ENDFOR  
+    FOR i FROM 0 TO n DO    # FROM s[0] to s[5]
+        WRITE s[i];
+    ENDFOR    
+END

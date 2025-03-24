@@ -1,0 +1,53 @@
+PROGRAM IS
+    n, p
+BEGIN
+    n := 0;         # 0
+    WRITE n;
+    p := 10;        
+    n := 1 + 1;     # 2  
+    WRITE n;
+    n := 1 + p;     # 11      | p= 10 
+    WRITE n;
+    n := p + 1;     # 11
+    WRITE n;
+    n := p + n;     # 21
+    WRITE n;
+    n := 10 - 1;    # 9  
+    WRITE n;
+    n := 1 - p;     # -9      | p= 10 
+    WRITE n;
+    n := p - 1;     # 9
+    WRITE n;
+    n := p - n;     # 1
+    WRITE n;
+    n := 1223 * 122;    # 149206
+    WRITE n;
+    n := 123 * p;     # 1230      | p= 10 
+    WRITE n;
+    n := p * 3311;        # 33110
+    WRITE n;
+    n := p * n;     # 331100
+    WRITE n;
+    n := 1223 / 122;    # 10
+    WRITE n;
+    n := 123 / p;     # 12      | p= 10 
+    WRITE n;
+    n := p / 3;        # 3
+    WRITE n;
+    n := p / n;     # 3
+    WRITE n;
+    n := 1223 % 122;    # 3
+    WRITE n;
+    n := -1223 % 122;    # -3
+    WRITE n;
+    n := 1223 % -122;    # 3
+    WRITE n;
+    n := -1223 % -122;    # -3
+    WRITE n;
+    n := 123 % p;     # 3      | p= 10 
+    WRITE n;
+    n := p % 3;        # 1
+    WRITE n;
+    n := p % n;     # 0
+    WRITE n;
+END

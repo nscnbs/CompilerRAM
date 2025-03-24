@@ -1,0 +1,115 @@
+PROGRAM IS
+    n, p, k
+BEGIN
+    n := 0;
+    p := 10;
+    n := 1223 * 122;    # 149206
+    WRITE n;
+    n := 1223 * -122;    # -149206
+    WRITE n;
+    n := -1223 * 122;    # -149206
+    WRITE n;
+    n := -1223 * -122;    # 149206
+    WRITE n;
+    n := 123 * p;     # 1230    
+    WRITE n;
+    n := -123 * p;     # -1230     
+    WRITE n;
+    n := p * -3311;        # -33110
+    WRITE n;
+    n := p * 3311;        # 33110
+    WRITE n;
+    k := 33110;
+    n := p * k;     # 331100
+    WRITE n;
+    k := -33110;
+    n := p * k;     # -331100
+    WRITE n;
+    n := 1223 / 122;    # 10
+    WRITE n;
+    n := -1223 / 122;    # -10
+    WRITE n;
+    n := 1223 / -122;    # -10
+    WRITE n;
+    n := -1223 / -122;    # 10
+    WRITE n;
+    n := 123 / p;     # 12    
+    WRITE n;
+    n := -123 / p;     # -12    
+    WRITE n;
+    n := p / 3;        # 3
+    WRITE n;
+    n := p / -3;        # -3
+    WRITE n;
+    k := 3;
+    n := p / k;     # 3
+    WRITE n;
+    k := -3;
+    n := p / k;     # -3
+    WRITE n;
+    n := 1233 % 122;    # 13
+    WRITE n;
+    n := -1233 % 122;    # -13
+    WRITE n;
+    n := 1233 % -122;    # 13
+    WRITE n;
+    n := -1233 % -122;    # -13
+    WRITE n;
+    n := 125 % p;     # 5   
+    WRITE n;
+    n := -125 % p;     # -5   
+    WRITE n;
+    n := p % 3;        # 1
+    WRITE n;
+    n := p % -3;        # 1
+    WRITE n;
+    n := 6;
+    n := p % n;     # 4
+    WRITE n;
+    n := -6;
+    n := p % n;     # 4
+    WRITE n;
+    p:= -10;
+    n := 123 * p;     # -1230     
+    WRITE n;
+    n := -123 * p;     # 1230      
+    WRITE n;
+    n := p * 3311;        # -33110
+    WRITE n;
+    n := p * -3311;        # 33110
+    WRITE n;
+    k := 33110;
+    n := p * k;     # -331100
+    WRITE n;
+    k := -33110;
+    n := p * k;     # 331100
+    WRITE n;
+    n := 123 / p;     # -12    
+    WRITE n;
+    n := -123 / p;     # 12    
+    WRITE n;
+    n := p / 3;        # -3
+    WRITE n;
+    n := p / -3;        # 3
+    WRITE n;
+    k := 3;
+    n := p / k;     # -3
+    WRITE n;
+    k := -3;
+    n := p / k;     # 3
+    WRITE n;
+    n := 125 % p;     # 5   
+    WRITE n;
+    n := -125 % p;     # -5   
+    WRITE n;
+    n := p % 3;        # -1
+    WRITE n;
+    n := p % 3;        # -1
+    WRITE n;
+    n := 6;
+    n := p % n;     # -4
+    WRITE n;
+    n := -6;
+    n := p % n;     # -4
+    WRITE n;
+END

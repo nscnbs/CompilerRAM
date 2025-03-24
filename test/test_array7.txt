@@ -1,0 +1,16 @@
+PROCEDURE check(c) IS
+BEGIN
+    c := c + 1;
+END
+
+PROGRAM IS
+	n, p[0:10], counter
+BEGIN
+    n := 0;
+    counter := 0;
+    WHILE p[n] <= 10 DO
+        check(counter);
+        n := n + 1;
+    ENDWHILE
+    WRITE counter;
+END

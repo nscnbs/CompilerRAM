@@ -1,0 +1,37 @@
+PROGRAM IS
+    a, b, q, r, d, k, f
+BEGIN
+    READ a;
+    READ b;
+    f := 0;
+    IF a < 0 THEN
+        a := 0 - a;
+        f := 1 - f;
+    ENDIF
+    IF b < 0 THEN
+        b := 0 - b;
+        f := 1 - f; 
+    ENDIF
+    q := 0;
+    d := b;
+    k := 1;
+    WHILE d <= a DO
+        d := d + d;
+        k := k + k;
+    ENDWHILE
+    WHILE k > 0 DO
+        IF d <= a THEN
+            a := a - d;
+            q := q + k;
+        ENDIF
+        d := d / 2;
+        k := k / 2;
+    ENDWHILE
+    IF f = 1 THEN 
+        q := 0 - q;
+        r := 0 - a;
+    ENDIF
+    WRITE q;
+    r := a;
+    WRITE r;
+END
